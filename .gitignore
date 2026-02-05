@@ -1,0 +1,29 @@
+# Environment
+.env
+.venv/
+venv/
+
+# Data (auto-generated)
+data/
+*.db
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Dataset (large files)
+dataset/*.csv
