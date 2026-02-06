@@ -24,16 +24,16 @@ class AgentStep:
     detail: str = ""
 
 
-def process_query(question: str) -> AgentResponse:
+def process_query(question: str, history: list[dict] | None = None) -> AgentResponse:
     # Non-streaming version (used by tests)
     result = None
-    for event in process_query_stream(question):
+    for event in process_query_stream(question, history):
         if isinstance(event, AgentResponse):
             result = event
     return result
 
 
-def process_query_stream(question: str) -> Generator[AgentStep | AgentResponse | str, None, None]:
+def process_query_stream(question: str, history: list[dict] | None = None) -> Generator[AgentStep | AgentResponse | str, None, None]:
     question = sanitize_input(question)
     if not question:
         yield AgentResponse(
@@ -46,7 +46,7 @@ def process_query_stream(question: str) -> Generator[AgentStep | AgentResponse |
     try:
         # Step 1: Classify
         yield AgentStep("classify", "🔍 Classifying your question...")
-        classification = classify_query(question)
+        classification = classify_query(question, history)
         logger.info(f"Classification: {classification.query_type} - {classification.reasoning}")
 
         type_labels = {
@@ -117,6 +117,7 @@ def process_query_stream(question: str) -> Generator[AgentStep | AgentResponse |
                     query_type=classification.query_type,
                     sql_result=sql_result,
                     rag_result=rag_result,
+                    history=history,
                 ):
                     answer_chunks.append(token)
                     yield token  # stream token to UI

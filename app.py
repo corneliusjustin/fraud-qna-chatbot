@@ -101,7 +101,15 @@ if question:
         streamed_text = ""
         is_streaming = False
 
-        for event in process_query_stream(question):
+        # Build conversation history for context
+        chat_history = []
+        for msg in st.session_state.messages:
+            chat_history.append({
+                "role": msg["role"],
+                "content": msg["content"],
+            })
+
+        for event in process_query_stream(question, history=chat_history):
             if isinstance(event, AgentStep):
                 # Show pipeline step in the status expander
                 status_container.update(label=event.label, state="running")

@@ -30,40 +30,11 @@ def synthesize_response(
     query_type: QueryType,
     sql_result: SQLResult | None = None,
     rag_result: RAGResult | None = None,
+    history: list[dict] | None = None,
 ) -> str:
-    context_parts = []
-
-    if sql_result and not sql_result.error and sql_result.rows:
-        table_text = format_sql_result_as_text(sql_result.columns, sql_result.rows)
-        context_parts.append(
-            f"## SQL Query Results\n"
-            f"Query: {sql_result.query}\n"
-            f"Rows returned: {sql_result.row_count}\n\n"
-            f"{table_text}"
-        )
-
-    if rag_result and not rag_result.error and rag_result.chunks:
-        doc_parts = []
-        for i, (chunk, meta) in enumerate(zip(rag_result.chunks, rag_result.metadatas)):
-            page = meta.get("page_number", "?")
-            source = meta.get("source", "unknown")
-            doc_parts.append(f"[Source: {source}, Page {page}]\n{chunk}")
-        context_parts.append(
-            f"## Document Context\n" + "\n\n---\n\n".join(doc_parts)
-        )
-
-    if not context_parts:
+    messages = build_synthesis_messages(question, query_type, sql_result, rag_result, history)
+    if messages is None:
         return _handle_no_context(question, query_type, sql_result, rag_result)
-
-    context_section = "\n\n".join(context_parts)
-    messages = [
-        {
-            "role": "system",
-            "content": SYNTHESIS_PROMPT.format(context_section=f"CONTEXT:\n{context_section}"),
-        },
-        {"role": "user", "content": question},
-    ]
-
     return chat_completion(messages, max_tokens=3000)
 
 
@@ -72,6 +43,7 @@ def build_synthesis_messages(
     query_type: QueryType,
     sql_result: SQLResult | None = None,
     rag_result: RAGResult | None = None,
+    history: list[dict] | None = None,
 ) -> list[dict] | None:
     context_parts = []
 
@@ -98,13 +70,18 @@ def build_synthesis_messages(
         return None
 
     context_section = "\n\n".join(context_parts)
-    return [
+    messages = [
         {
             "role": "system",
             "content": SYNTHESIS_PROMPT.format(context_section=f"CONTEXT:\n{context_section}"),
         },
-        {"role": "user", "content": question},
     ]
+    # Include recent conversation history so the model can reference prior answers
+    if history:
+        for msg in history[-6:]:  # last 3 exchanges
+            messages.append({"role": msg["role"], "content": msg["content"]})
+    messages.append({"role": "user", "content": question})
+    return messages
 
 
 def synthesize_response_stream(
@@ -112,8 +89,9 @@ def synthesize_response_stream(
     query_type: QueryType,
     sql_result: SQLResult | None = None,
     rag_result: RAGResult | None = None,
+    history: list[dict] | None = None,
 ) -> Generator[str, None, None]:
-    messages = build_synthesis_messages(question, query_type, sql_result, rag_result)
+    messages = build_synthesis_messages(question, query_type, sql_result, rag_result, history)
     if messages is None:
         yield _handle_no_context(question, query_type, sql_result, rag_result)
         return

@@ -24,11 +24,15 @@ Respond with ONLY a JSON object (no markdown, no code blocks):
 """
 
 
-def classify_query(question: str) -> ClassificationResult:
+def classify_query(question: str, history: list[dict] | None = None) -> ClassificationResult:
     messages = [
         {"role": "system", "content": CLASSIFICATION_PROMPT},
-        {"role": "user", "content": question},
     ]
+    # Include recent conversation history for context on follow-up questions
+    if history:
+        for msg in history[-6:]:  # last 3 exchanges
+            messages.append({"role": msg["role"], "content": msg["content"]})
+    messages.append({"role": "user", "content": question})
 
     try:
         raw = chat_completion_routing(messages)
