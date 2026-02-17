@@ -2,9 +2,9 @@ import re
 import sqlite3
 import logging
 from services.database import execute_query, get_connection, get_table_schema
-from services.together_ai import chat_completion
+from services.together_ai import chat_completion_routing
 from models.schemas import SQLResult
-from utils.helpers import is_safe_sql, get_primary_model
+from utils.helpers import is_safe_sql
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ def generate_sql(question: str, model: str | None = None) -> str:
         {"role": "user", "content": f"Generate a SQLite SELECT query for this question:\n\n{question}"},
     ]
     
-    raw = chat_completion(messages, model=model)
+    raw = chat_completion_routing(messages)
     
     # Clean up the response - strip markdown code blocks if present
     sql = raw.strip()

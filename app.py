@@ -70,7 +70,7 @@ with st.sidebar:
             st.session_state.pending_question = q
 
     st.markdown("---")
-    st.caption("Built with PydanticAI, Together AI, SQLite & ChromaDB")
+    st.caption("Built with Together AI, SQLite & ChromaDB")
 
 
 # Main chat area

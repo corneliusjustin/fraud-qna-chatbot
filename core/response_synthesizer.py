@@ -35,7 +35,7 @@ def synthesize_response(
     messages = build_synthesis_messages(question, query_type, sql_result, rag_result, history)
     if messages is None:
         return _handle_no_context(question, query_type, sql_result, rag_result)
-    return chat_completion(messages, max_tokens=3000)
+    return chat_completion(messages, max_tokens=128000)
 
 
 def build_synthesis_messages(
@@ -95,7 +95,7 @@ def synthesize_response_stream(
     if messages is None:
         yield _handle_no_context(question, query_type, sql_result, rag_result)
         return
-    yield from chat_completion_stream(messages, max_tokens=3000)
+    yield from chat_completion_stream(messages, max_tokens=128000)
 
 
 def _handle_no_context(
