@@ -71,7 +71,7 @@ sequenceDiagram
     participant RAG as RAG Tool
     participant DB as SQLite Database
     participant VS as ChromaDB Vector Store
-    participant Synth as Response Synthesizer<br/>(405B model)
+    participant Synth as Response Synthesizer<br/>(397B model)
     participant Scorer as Quality Scorer<br/>(70B model)
 
     User->>Streamlit: Submits question
@@ -153,7 +153,7 @@ The LLM receives a system prompt containing:
 - Three worked examples mapping English questions to valid SQL queries
 - Explicit rules: SELECT-only, use `strftime()` for date operations, include WHERE clauses, limit results unless aggregating
 
-The model (70B, chosen for speed over the 405B) generates a SQL query based on the user's question and the conversation history.
+The model (70B, chosen for speed over the 397B) generates a SQL query based on the user's question and the conversation history.
 
 ### Validation Pipeline
 
@@ -270,7 +270,7 @@ The system uses different models for different tasks to balance quality and spee
 |------|-------|-----------|
 | Query classification | 70B (routing model) | Simple classification task; smaller model responds faster |
 | SQL generation | 70B (routing model) | Structured output; does not need the largest model |
-| Response synthesis | 405B (primary model) | Most important output; largest model produces highest quality |
+| Response synthesis | 397B (primary model) | Most important output; largest model produces highest quality |
 | Quality scoring | 70B (routing model) | Evaluation is a focused task; speed matters for user experience |
 | Embeddings | bge-base-en-v1.5 | Purpose-built embedding model; not a chat model |
 
@@ -436,16 +436,16 @@ All LLM model names are stored in the `.env` file, so you can switch models with
 ```env
 TOGETHER_API_KEY=your_together_api_key_here
 
-PRIMARY_MODEL=meta-llama/Meta-Llama-3.1-405B-Instruct-Turbo
-ROUTING_MODEL=meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo
+PRIMARY_MODEL=Qwen/Qwen3.5-397B-A17B
+ROUTING_MODEL=meta-llama/Llama-3.3-70B-Instruct-Turbo
 EMBEDDING_MODEL=BAAI/bge-base-en-v1.5
 ```
 
 | Variable | Purpose | Default |
 |----------|---------|---------|
 | `TOGETHER_API_KEY` | Authentication for Together AI API | (required) |
-| `PRIMARY_MODEL` | Used for response synthesis -- the main answer | Meta-Llama-3.1-405B-Instruct-Turbo |
-| `ROUTING_MODEL` | Used for classification, SQL generation, and quality scoring | Meta-Llama-3.1-70B-Instruct-Turbo |
+| `PRIMARY_MODEL` | Used for response synthesis -- the main answer | Qwen/Qwen3.5-397B-A17B |
+| `ROUTING_MODEL` | Used for classification, SQL generation, and quality scoring | meta-llama/Llama-3.3-70B-Instruct-Turbo |
 | `EMBEDDING_MODEL` | Used for vectorizing document chunks and search queries | BAAI/bge-base-en-v1.5 |
 
 To change models, edit `.env` and restart Streamlit. No data reprocessing is needed unless you change the embedding model (in which case, delete the `data/vector_store/` folder and re-run `setup_data.py`).
